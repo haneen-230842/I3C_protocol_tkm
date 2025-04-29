@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 `include "i3c_params.vh"
 module bus_controller (
 	input 		clk_i,
@@ -25,7 +26,7 @@ module bus_controller (
 			sel_od_pp_o	<= 1'b0;
 		end else begin
 			//SCL generation
-			if (!state_i == `IDLE) begin
+			if (state_i != `IDLE) begin
 				if (clk_divider == 16'd49) begin //example for 1mhz SCL
 					clk_divider <= 0;
 					scl_internal <= ~scl_internal;

@@ -7,9 +7,10 @@
 `define IDLE    3'b000
 `define START   3'b001
 `define ADDRESS 3'b010
-`define DATA    3'b011
-`define STOP    3'b100
-`define ERROR   3'b101
+`define ACK_WAIT 3'b011
+`define DATA    3'b100
+`define STOP    3'b101
+`define ERROR   3'b110
 
 //Bus Parameters
 `define ADDR_WIDTH 7

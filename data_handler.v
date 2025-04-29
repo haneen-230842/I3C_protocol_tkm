@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 `include "i3c_params.vh"
 module data_handler(
 	input 		clk_i,
@@ -44,7 +45,7 @@ module data_handler(
 							tx_shift_reg <= {tx_shift_reg[`DATA_WIDTH-2:0], 1'b0};
 						end else begin
 							//Master writing - read SDA
-							rx_shift_reg <= {rx_shift_reg[`DATA_WIDTH-2:0], 1'b0};
+							rx_shift_reg <= {rx_shift_reg[`DATA_WIDTH-2:0], sda_i};
 						end
 						bit_counter <= bit_counter + 1;
 						data_valid_o <= 1'b1;

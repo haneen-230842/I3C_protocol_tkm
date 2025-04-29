@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 `include "i3c_params.vh"
 
 module i3c_controller (
@@ -22,7 +23,9 @@ module i3c_controller (
 	output 			error,
 	output [`STATE_WIDTH-1:0] current_state_o  //for debug/test
 );
-
+    // Proper SCL clock generation
+    reg scl_enable;
+    reg scl_out;
 	//Wire declarations for inter-module connections
 	wire [`STATE_WIDTH-1:0]	target_addr;
 	wire [`ADDR_WIDTH-1:0]  state;
@@ -31,6 +34,8 @@ module i3c_controller (
 	wire [`DATA_WIDTH-1:0]	rx_data;
 	wire		data_valid;
 	wire		data_acked;
+	
+	wire addressing_sda;      // From addressing module
 	
 	//Instantiate State machine
 	state_machine state_machine_inst(
@@ -52,7 +57,7 @@ module i3c_controller (
 		.state_i(state),
 		.scl_i(scl_i),
 		.sda_i(sda_i),
-		.scl_o(scl_o),
+		//.scl_o(scl_out),
 		.sda_o(sda_o),
 		.sel_od_pp_o(sel_od_pp_o)
 	);
@@ -85,7 +90,26 @@ module i3c_controller (
 		.read_data_o(read_data)
 	);
     // Clock generation (simplified)
-    assign scl_o = (state != `IDLE) ? clk_i : 1'b1;
+    always @(posedge clk_i or negedge rst_ni) begin
+        if (!rst_ni) begin
+            scl_out <= 1'b1;    //initial high state
+            scl_enable <= 1'b0;
+        end else begin
+            case (state)
+                `IDLE: begin
+                     scl_out <= 1'b1;
+                     scl_enable <= 1'b0;
+                 end
+                 default: begin
+                     scl_enable <= 1'b1;
+                     if (scl_enable) begin
+                        scl_out <= ~scl_out; // Toggle Clock
+                     end
+                 end
+            endcase
+        end
+    end             
+    assign scl_o = scl_enable ? scl_out : 1'b1;
     assign sel_od_pp_o = (state == `DATA) ? 1'b1 : 1'b0; // Push-pull in data phase
     assign current_state_o = state;  // Expose state for debug
 endmodule

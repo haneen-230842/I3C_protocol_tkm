@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 `include "i3c_params.vh"
 
 module state_machine(
@@ -31,9 +32,13 @@ module state_machine(
 			`IDLE: if (start_i) next_state = `START;
 			`START: next_state = `ADDRESS;
 			`ADDRESS: if (addr_acked_i === 1'b1)
-			             next_state = `DATA;
-				      else if (addr_acked_i === 1'b0) 
-				         next_state = `ERROR;
+                         next_state = `DATA;
+                      else if (addr_acked_i === 1'b0) 
+                         next_state = `ACK_WAIT;
+            `ACK_WAIT: if (addr_acked_i === 1'b1)
+                          next_state = `DATA;
+                       else if (addr_acked_i === 1'b0) 
+                          next_state = `ADDRESS;
 			`DATA: if (data_acked_i) next_state = `STOP;
 				  else if (!data_acked_i) next_state = `ERROR;
 			`STOP: next_state = `IDLE;

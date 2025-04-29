@@ -6,6 +6,7 @@ module tb_i3c_controller();
     reg clk;
     reg rst_n;
     
+    reg scl_drv;         // Controller drives this low for clock low
     // PHY Interface
     wire scl;
     wire sda;
@@ -44,8 +45,7 @@ module tb_i3c_controller();
         .current_state_o(current_state)
     );
     
-    // SDA bus modeling (open-drain)
-    assign sda = sda_pull_down ? 1'b0 : 1'bz;
+    
     
     // Clock generation
     initial begin
@@ -64,7 +64,7 @@ module tb_i3c_controller();
                 `ERROR:   $display("[%0t] State: ERROR", $time);
             endcase
         end
-        
+    assign sda = sda_pull_down ? 1'b0 : 1'bz;
     // Main test sequence
 	initial begin
             // Initialize
@@ -92,9 +92,10 @@ module tb_i3c_controller();
             $display("  Address phase started");
             
             // Simulate slave ACK
-            #400 sda_pull_down = 1;
+            @(posedge scl);
+            sda_pull_down = 1;
             @(negedge scl);
-            #50 sda_pull_down = 0;
+            #10 sda_pull_down = 0;
             
             // Wait for completion
             wait(transfer_complete);
@@ -110,9 +111,9 @@ module tb_i3c_controller();
             start_transfer = 0;
             
             wait(current_state == `ADDRESS);
-            #400 sda_pull_down = 1; // ACK
+            #10 sda_pull_down = 1; // ACK
             @(negedge scl);
-            #50 sda_pull_down = 0;
+            #10 sda_pull_down = 0;
             
             // Slave sends data 0x3C
             wait(current_state == `DATA);
